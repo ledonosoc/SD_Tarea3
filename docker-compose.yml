@@ -1,6 +1,7 @@
 version: '2'
 services:
   cassandra:
+    container_name: cassandra
     image: docker.io/bitnami/cassandra:4.0
     ports:
       - 7000:7000
@@ -17,6 +18,7 @@ services:
       - MAX_HEAP_SIZE=2G
       - HEAP_NEWSIZE=200M
   cassandra2:
+    container_name: cassandra2
     image: docker.io/bitnami/cassandra:4.0
     ports:
       - 7001:7000
@@ -32,6 +34,7 @@ services:
       - MAX_HEAP_SIZE=2G
       - HEAP_NEWSIZE=200M
   cassandra3:
+    container_name: cassandra3
     image: docker.io/bitnami/cassandra:4.0
     ports:
       - 7002:7000
@@ -46,6 +49,10 @@ services:
       # Therefore, memory options are mandatory if multiple Cassandras are launched in the same node.
       - MAX_HEAP_SIZE=2G
       - HEAP_NEWSIZE=200M
+  api:
+    container_name: API
+    build: .
+    tty: true
 volumes:
   cassandra_data:
     driver: local
