@@ -33,6 +33,9 @@ from cassandra.cluster import Cluster
 from cassandra.auth import PlainTextAuthProvider
 from cassandra.policies import DCAwareRoundRobinPolicy
 
+pacientes_counter = 0
+recetas_counter = 0
+
 def cassandra_conn():
    auth_provider = PlainTextAuthProvider(username='cassandra',password='cassandra')
    cluster = Cluster(['cassandra'], load_balancing_policy=DCAwareRoundRobinPolicy() ,auth_provider=auth_provider)
@@ -87,34 +90,34 @@ def CreateTables(session):
         )
         """)
 
-def Insert(session):
-    #query = SimpleStatement("""
-    #    INSERT INTO paciente ("id", "nombre", "apellido", "rut", "email", "fecha_nacimiento")
-    #    VALUES (%(id)s, %(nombre)s, %(apellido)s, %(rut)s, %(email)s, , %(fecha)s)
-    #    """, consistency_level=ConsistencyLevel.ONE)
-
+def InsertPaciente(session, data):
     prepared = session.prepare("""
         INSERT INTO paciente ("id", "nombre", "apellido", "rut", "email", "fecha_nacimiento")
         VALUES (?, ?, ?, ?, ?, ?)
         """)
 
-    for i in range(10):
-        log.info("inserting row %s" % i)
-        #session.execute(query, dict(id="%d" % i, nombre='a', apellido='b', rut='', email='' ,fecha=''))
-        session.execute(prepared, (i, 'b', 'b','b','b','b'))
+    session.execute(prepared, (pacientes_counter, '%s' %data['nombre'],'%s'%data['apellido'],'%s' %data['rut'],'%s' %data['email'],'%s'%data['fecha_nacimiento']))
+    pacientes_counter = pacientes_counter + 1
 
-def Eliminar(session):
+def InsertReceta(session, data):
+    paciente_id = SelectPaciente(session,data['rut'])
+    if paciente_id == None:
+        InsertPaciente(session,data)
+        paciente_id= pacientes_counter-1
+    else:
+        prepared = session.prepare("""
+            INSERT INTO recetas ("id", "id_paciente", "comentario", "farmaco", "doctor")
+            VALUES (?, ?, ?, ?, ?, ?)
+            """)
+
+        session.execute(prepared, (recetas_counter, '%s' %paciente_id, '%s','%s'%data['comentario'],'%s' %data['farmaco'],'%s' %data['doctor']))
+        recetas_counter = recetas_counter + 1
+
+def Delete(session):
     session.execute("DROP KEYSPACE " + KEYSPACE)
 
-def main():
-    session, cluster = cassandra_conn()
-    CreateTables(session)
-    KEYSPACE = "pacientes"
-    log.info("setting keyspace...")
-    session.set_keyspace(KEYSPACE)
-    Insert(session)
-
-    future = session.execute_async("SELECT * FROM paciente")
+def SelectPaciente(session, rut):
+    future = session.execute_async("SELECT id FROM paciente WHERE rut=%s" %rut)
     log.info("id\tnombre\tapellido\trut\temail\tfecha_nacimiento")
     log.info("---\t----\t----\t----\t----\t----")
 
@@ -123,9 +126,18 @@ def main():
     except Exception:
         log.exception("Error reading rows:")
         return
+    
+    #for row in rows:
+    #   log.info(''.join(str(row)))
+    return rows
 
-    for row in rows:
-        log.info(''.join(str(row)))
+def main():
+    session, cluster = cassandra_conn()
+    CreateTables(session)
+    KEYSPACE = "pacientes"
+    log.info("setting keyspace...")
+    session.set_keyspace(KEYSPACE)
+    InsertPaciente(session)
 
 if __name__ == "__main__":
     main()
