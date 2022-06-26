@@ -88,10 +88,10 @@ def CreateTables(session):
         """)
 
 def Insert(session):
-    query = SimpleStatement("""
-        INSERT INTO paciente ("id", "nombre", "apellido", "rut", "email", "fecha_nacimiento")
-        VALUES (%(id)s, %(nombre)s, %(apellido)s, %(rut)s, %(email)s, , %(fecha)s)
-        """, consistency_level=ConsistencyLevel.ONE)
+    #query = SimpleStatement("""
+    #    INSERT INTO paciente ("id", "nombre", "apellido", "rut", "email", "fecha_nacimiento")
+    #    VALUES (%(id)s, %(nombre)s, %(apellido)s, %(rut)s, %(email)s, , %(fecha)s)
+    #    """, consistency_level=ConsistencyLevel.ONE)
 
     prepared = session.prepare("""
         INSERT INTO paciente ("id", "nombre", "apellido", "rut", "email", "fecha_nacimiento")
@@ -125,7 +125,7 @@ def main():
         return
 
     for row in rows:
-        log.info('\t'.join(row))
+        log.info(''.join(str(row)))
 
 if __name__ == "__main__":
     main()
