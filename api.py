@@ -9,7 +9,7 @@ import json
 sleep (90)
 log = logging.getLogger()
 log.setLevel('DEBUG')
-handler = logging. StreamHandler
+handler = logging.StreamHandler()
 handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s"))
 log.addHandler(handler)
 

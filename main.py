@@ -137,6 +137,41 @@ def SelectPaciente(session, rut):
     #   log.info(''.join(str(row)))
     return rows
 
+def Select(session, rut):
+    KEYSPACE = "pacientes"
+    log.info("setting keyspace...")
+    session.set_keyspace(KEYSPACE)
+    future = session.execute_async("SELECT * FROM paciente")
+    log.info("id\tnombre\tapellido\trut\temail\tfecha_nacimiento")
+    log.info("---\t----\t----\t----\t----\t----")
+
+    try:
+        rows1 = future.result()
+    except Exception:
+        log.exception("Error reading rows:")
+        return
+    
+    for row in rows:
+        log.info(''.join(str(row)))    
+
+    KEYSPACE = "recetas"
+    log.info("setting keyspace...")
+    session.set_keyspace(KEYSPACE)
+    future = session.execute_async("SELECT * FROM recetas")
+    log.info("id\tid_paciente\tcomentario\tfarmaco\tdoctor")
+    log.info("---\t----\t----\t----\t----")
+
+    try:
+        rows2 = future.result()
+    except Exception:
+        log.exception("Error reading rows:")
+        return
+    
+    for row in rows:
+        log.info(''.join(str(row)))
+    return rows1,rows2
+    
+
 def Delete(session,data):
     KEYSPACE = "recetas"
     log.info("setting keyspace...")
