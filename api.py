@@ -6,7 +6,7 @@ from flask_json_schema import JsonSchema, JsonValidationError
 import json
 
 
-sleep (240)
+sleep (90)
 log = logging.getLogger()
 log.setLevel('DEBUG')
 handler = logging. StreamHandler
@@ -20,6 +20,9 @@ from cassandra.auth import PlainTextAuthProvider
 
 from cassandra.query import dict_factory
 
+pacientes_counter = 0
+recetas_counter = 0
+
 app = Flask(__name__)
 
 def cassandra_conn():
@@ -28,8 +31,8 @@ def cassandra_conn():
     session = cluster.connect()
     return session, cluster
 
-def CreateTables():
-    KEYSPACE = "Pacientes"
+def CreateTables(session):
+    KEYSPACE = "pacientes"
     log.info("creating keyspace...")
     session.execute("""
         CREATE KEYSPACE IF NOT EXISTS %s
@@ -52,57 +55,62 @@ def CreateTables():
         )
         """)
 
-    KEYSPACE = "Recetas"
+    KEYSPACE = "recetas"
     log.info("creating keyspace...")
     session.execute("""
         CREATE KEYSPACE IF NOT EXISTS %s
         WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '3' }
         """ % KEYSPACE)
-    
+
     log.info("setting keyspace...")
     session.set_keyspace(KEYSPACE)
 
     log.info("creating table...")
     session.execute("""
-        CREATE TABLE IF NOT EXISTS receta (
+        CREATE TABLE IF NOT EXISTS recetas (
             id int,
-            paciente_id int,
-            fecha_nacimiento text,
+            id_paciente int,
             comentario text,
-            farmacos text,
+            farmaco text,
             doctor text,
             PRIMARY KEY (id)
         )
         """)
 
-def Insert(session):
-    query = SimpleStatement("""
-        INSERT INTO paciente ("id", "nombre", "apellido", "rut", "email", "fecha_nacimiento")
-        VALUES (%(id)s, %(nombre)s, %(apellido)s, %(rut)s, %(email)s, , %(fecha)s)
-        """, consistency_level=ConsistencyLevel.ONE)
-
+def InsertPaciente(session, data):
+    KEYSPACE = "pacientes"
+    log.info("setting keyspace...")
+    session.set_keyspace(KEYSPACE)
     prepared = session.prepare("""
         INSERT INTO paciente ("id", "nombre", "apellido", "rut", "email", "fecha_nacimiento")
         VALUES (?, ?, ?, ?, ?, ?)
         """)
 
-    for i in range(10):
-        log.info("inserting row %d" % i)
-        session.execute(query, dict(id="%d" % i, nombre='a', apellido='b', rut="", email="" ,fecha=""))
-        session.execute(prepared, ("%d" % i, 'b', 'b','b','b','b'))
+    session.execute(prepared, (pacientes_counter, '%s' %data['nombre'],'%s'%data['apellido'],'%s' %data['rut'],'%s' %data['email'],'%s'%data['fecha_nacimiento']))
+    pacientes_counter = pacientes_counter + 1
 
-def Eliminar(session):
-    session.execute("DROP KEYSPACE " + KEYSPACE)
+def InsertReceta(session, data):
+    KEYSPACE = "recetas"
+    log.info("setting keyspace...")
+    session.set_keyspace(KEYSPACE)
+    paciente_id = SelectPaciente(session,data['rut'])
+    if paciente_id == None:
+        InsertPaciente(session,data)
+        paciente_id= pacientes_counter-1
+    else:
+        prepared = session.prepare("""
+            INSERT INTO recetas ("id", "id_paciente", "comentario", "farmaco", "doctor")
+            VALUES (?, ?, ?, ?, ?, ?)
+            """)
 
-def main():
-    session, cluster = cassandra_conn()
-    CreateTables(session)
+        session.execute(prepared, (recetas_counter, '%s' %paciente_id, '%s','%s'%data['comentario'],'%s' %data['farmaco'],'%s' %data['doctor']))
+        recetas_counter = recetas_counter + 1
+
+def SelectPaciente(session, rut):
     KEYSPACE = "pacientes"
     log.info("setting keyspace...")
     session.set_keyspace(KEYSPACE)
-    Insert(session)
-
-    future = session.execute_async("SELECT * FROM paciente")
+    future = session.execute_async("SELECT id FROM paciente WHERE rut=%s" %rut)
     log.info("id\tnombre\tapellido\trut\temail\tfecha_nacimiento")
     log.info("---\t----\t----\t----\t----\t----")
 
@@ -111,34 +119,61 @@ def main():
     except Exception:
         log.exception("Error reading rows:")
         return
+    
+    #for row in rows:
+    #   log.info(''.join(str(row)))
+    return rows
 
-    for row in rows:
-        log.info('\t'.join(row))
+def Delete(session,data):
+    KEYSPACE = "recetas"
+    log.info("setting keyspace...")
+    session.set_keyspace(KEYSPACE)
+    
+    session.execute("DELETE FROM recetas WHERE id='%s';"%data['id'])
+
+def UpdateReceta(session,data):
+    KEYSPACE = "recetas"
+    log.info("setting keyspace...")
+    session.set_keyspace(KEYSPACE)
+    session.execute("""UPDATE recetas 
+    SET comentario="%s",
+    farmaco="%s",
+    doctor="%s"
+    WHERE id="%s";
+    """ %data['comentario'] %data['farmaco'] %data['doctor'] %data['id'])
+
+def main():
+    session, cluster = cassandra_conn()
+    CreateTables(session)
 
 @app.route('/')
 def hello_world():
+    session, cluster = cassandra_conn()
+    CreateTables(session)
     return 'Hello, World!'
 
 @app.route('/create', methods=['POST'])
 def get_body():
+    session, cluster = cassandra_conn()
     data = request.get_json()
     log.info(data)
-    new = {"nombre": f"{data['nombre']}",
-           "apellido": f"{data['apellido']}",
+    new = { "id": f"{data['id']}",
+            "id_paciente": f"{data['id_paciente']}",
+            "nombre": f"{data['nombre']}",
+            "apellido": f"{data['apellido']}",
             "rut": f"{data['rut']}",
             "email": f"{data['email']}",
             "fecha_nacimiento": f"{data['fecha_nacimiento']}",
             "comentario": f"{data['comentario']}",
-            "farmacos": f"{data['farmacos']}",
+            "farmaco": f"{data['farmaco']}",
             "doctor": f"{data['doctor']}"
            }
     
-    print(new)
+    InsertReceta(session,new)
 
     return (new)
 
 
 
 if __name__ == '__main__':
-    main()
-    app.run(host='0.0.0.0', port=8080, debug=True, threaded=True)
+    app.run(host='0.0.0.0', port=5000, debug=True, threaded=True)
