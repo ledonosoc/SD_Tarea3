@@ -91,6 +91,9 @@ def CreateTables(session):
         """)
 
 def InsertPaciente(session, data):
+    KEYSPACE = "pacientes"
+    log.info("setting keyspace...")
+    session.set_keyspace(KEYSPACE)
     prepared = session.prepare("""
         INSERT INTO paciente ("id", "nombre", "apellido", "rut", "email", "fecha_nacimiento")
         VALUES (?, ?, ?, ?, ?, ?)
@@ -100,6 +103,9 @@ def InsertPaciente(session, data):
     pacientes_counter = pacientes_counter + 1
 
 def InsertReceta(session, data):
+    KEYSPACE = "recetas"
+    log.info("setting keyspace...")
+    session.set_keyspace(KEYSPACE)
     paciente_id = SelectPaciente(session,data['rut'])
     if paciente_id == None:
         InsertPaciente(session,data)
@@ -113,10 +119,10 @@ def InsertReceta(session, data):
         session.execute(prepared, (recetas_counter, '%s' %paciente_id, '%s','%s'%data['comentario'],'%s' %data['farmaco'],'%s' %data['doctor']))
         recetas_counter = recetas_counter + 1
 
-def Delete(session):
-    session.execute("DROP KEYSPACE " + KEYSPACE)
-
 def SelectPaciente(session, rut):
+    KEYSPACE = "pacientes"
+    log.info("setting keyspace...")
+    session.set_keyspace(KEYSPACE)
     future = session.execute_async("SELECT id FROM paciente WHERE rut=%s" %rut)
     log.info("id\tnombre\tapellido\trut\temail\tfecha_nacimiento")
     log.info("---\t----\t----\t----\t----\t----")
@@ -131,13 +137,31 @@ def SelectPaciente(session, rut):
     #   log.info(''.join(str(row)))
     return rows
 
+def Delete(session,data):
+    KEYSPACE = "recetas"
+    log.info("setting keyspace...")
+    session.set_keyspace(KEYSPACE)
+    
+    session.execute("DELETE FROM recetas WHERE id='%s';"%data['id'])
+
+def UpdateReceta(session,data):
+    KEYSPACE = "recetas"
+    log.info("setting keyspace...")
+    session.set_keyspace(KEYSPACE)
+    session.execute("""UPDATE recetas 
+    SET comentario="%s",
+    farmaco="%s",
+    doctor="%s"
+    WHERE id="%s";
+    """ %data['comentario'] %data['farmaco'] %data['doctor'] %data['id'])
+
 def main():
     session, cluster = cassandra_conn()
     CreateTables(session)
-    KEYSPACE = "pacientes"
-    log.info("setting keyspace...")
-    session.set_keyspace(KEYSPACE)
-    InsertPaciente(session)
+    #KEYSPACE = "pacientes"
+    #log.info("setting keyspace...")
+    #session.set_keyspace(KEYSPACE)
+    #InsertPaciente(session)
 
 if __name__ == "__main__":
     main()
