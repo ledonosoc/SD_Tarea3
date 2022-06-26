@@ -75,28 +75,36 @@ def CreateTables():
         )
         """)
 
-def main():
-    session, cluster = cassandra_conn()
-    CreateTables()
-
+def Insert(session):
     query = SimpleStatement("""
-        INSERT INTO mytable (thekey, col1, col2)
-        VALUES (%(key)s, %(a)s, %(b)s)
+        INSERT INTO paciente ("id", "nombre", "apellido", "rut", "email", "fecha_nacimiento")
+        VALUES (%(id)s, %(nombre)s, %(apellido)s, %(rut)s, %(email)s, , %(fecha)s)
         """, consistency_level=ConsistencyLevel.ONE)
 
     prepared = session.prepare("""
-        INSERT INTO mytable (thekey, col1, col2)
-        VALUES (?, ?, ?)
+        INSERT INTO paciente ("id", "nombre", "apellido", "rut", "email", "fecha_nacimiento")
+        VALUES (?, ?, ?, ?, ?, ?)
         """)
 
     for i in range(10):
         log.info("inserting row %d" % i)
-        session.execute(query, dict(key="key%d" % i, a='a', b='b'))
-        session.execute(prepared, ("key%d" % i, 'b', 'b'))
+        session.execute(query, dict(id="%d" % i, nombre='a', apellido='b', rut="", email="" ,fecha=""))
+        session.execute(prepared, ("%d" % i, 'b', 'b','b','b','b'))
 
-    future = session.execute_async("SELECT * FROM mytable")
-    log.info("key\tcol1\tcol2")
-    log.info("---\t----\t----")
+def Eliminar(session):
+    session.execute("DROP KEYSPACE " + KEYSPACE)
+
+def main():
+    session, cluster = cassandra_conn()
+    CreateTables(session)
+    KEYSPACE = "pacientes"
+    log.info("setting keyspace...")
+    session.set_keyspace(KEYSPACE)
+    Insert(session)
+
+    future = session.execute_async("SELECT * FROM paciente")
+    log.info("id\tnombre\tapellido\trut\temail\tfecha_nacimiento")
+    log.info("---\t----\t----\t----\t----\t----")
 
     try:
         rows = future.result()
@@ -106,8 +114,6 @@ def main():
 
     for row in rows:
         log.info('\t'.join(row))
-
-    session.execute("DROP KEYSPACE " + KEYSPACE)
 
 @app.route('/')
 def hello_world():
@@ -126,8 +132,11 @@ def get_body():
             "farmacos": f"{data['farmacos']}",
             "doctor": f"{data['doctor']}"
            }
+    
     print(new)
+
     return (new)
+
 
 
 if __name__ == '__main__':
