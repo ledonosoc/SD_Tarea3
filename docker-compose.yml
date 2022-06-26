@@ -18,6 +18,7 @@ services:
       # Therefore, memory options are mandatory if multiple Cassandras are launched in the same node.
       - MAX_HEAP_SIZE=2G
       - HEAP_NEWSIZE=200M
+    restart: always
   cassandra2:
     container_name: cassandra2
     image: docker.io/bitnami/cassandra:4.0

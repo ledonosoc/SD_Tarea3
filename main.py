@@ -18,7 +18,7 @@ from asyncio import create_task
 import logging
 from time import sleep
 
-sleep(300)
+sleep(90)
 
 log = logging.getLogger()
 log.setLevel('DEBUG')
@@ -99,9 +99,9 @@ def Insert(session):
         """)
 
     for i in range(10):
-        log.info("inserting row %d" % i)
-        session.execute(query, dict(id="%d" % i, nombre='a', apellido='b', rut="", email="" ,fecha=""))
-        session.execute(prepared, ("%d" % i, 'b', 'b','b','b','b'))
+        log.info("inserting row %s" % i)
+        #session.execute(query, dict(id="%d" % i, nombre='a', apellido='b', rut='', email='' ,fecha=''))
+        session.execute(prepared, (i, 'b', 'b','b','b','b'))
 
 def Eliminar(session):
     session.execute("DROP KEYSPACE " + KEYSPACE)
