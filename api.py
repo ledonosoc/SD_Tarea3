@@ -9,7 +9,7 @@ import json
 sleep (90)
 log = logging.getLogger()
 log.setLevel('DEBUG')
-handler = logging. StreamHandler
+handler = logging.StreamHandler()
 handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s"))
 log.addHandler(handler)
 
@@ -173,7 +173,27 @@ def get_body():
 
     return (new)
 
+@app.route('/get', methods=['GET'])
+def get_body():
+    session, cluster = cassandra_conn()
+    session.row_factory = dict_factory
+    pacientes = session.execute("SELECT * FROM paciente")
+    
+    pacientes_response = []
+    for pac in list(pacientes):
+        aux = dict(pac)
+        aux["id"] = str(pac["id"])
+        pacientes_response.append(aux)
+    
+    recetas = session.execute("SELECT * FROM recetas")
 
+    recetas_response = []
+    for rec in list(recetas):
+        aux = dict(rec)
+        aux["id"] = str(rec["id"])
+        recetas_response.append(aux)
+
+    return jsonify({"Pacientes: ": pacientes_response, "Recetas": recetas_response})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True, threaded=True)
