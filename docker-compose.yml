@@ -19,6 +19,12 @@ services:
       - MAX_HEAP_SIZE=2G
       - HEAP_NEWSIZE=200M
     restart: always
+    healthcheck:
+      test: ["CMD", "cqlsh", "-e", "describe keyspaces" ]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+
   cassandra2:
     container_name: cassandra2
     image: docker.io/bitnami/cassandra:4.0
@@ -39,6 +45,11 @@ services:
     depends_on:
       - cassandra
     restart: always
+    healthcheck:
+      test: ["CMD", "cqlsh", "-e", "describe keyspaces" ]
+      interval: 5s
+      timeout: 5s
+      retries: 60
   cassandra3:
     container_name: cassandra3
     image: docker.io/bitnami/cassandra:4.0
@@ -59,13 +70,23 @@ services:
     depends_on:
       - cassandra
     restart: always
+    healthcheck:
+      test: ["CMD", "cqlsh", "-e", "describe keyspaces" ]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+
   api:
     container_name: API
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     tty: true
     depends_on:
       - cassandra
-    restart: always  
+    restart: on-failure:10
+    ports:
+      - "5000:5000"
 volumes:
   cassandra_data:
     driver: local
