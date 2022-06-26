@@ -65,7 +65,9 @@ services:
     tty: true
     depends_on:
       - cassandra
-    restart: always  
+    restart: always 
+    ports:
+      - 5000:5000 
 volumes:
   cassandra_data:
     driver: local
