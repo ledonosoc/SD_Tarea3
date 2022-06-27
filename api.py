@@ -138,7 +138,7 @@ def Select(session):
         log.exception("Error reading rows:")
         return
     
-    for row in rows:
+    for row in rows1:
         log.info(''.join(str(row)))    
 
     KEYSPACE = "recetas"
@@ -154,7 +154,7 @@ def Select(session):
         log.exception("Error reading rows:")
         return
     
-    for row in rows:
+    for row in rows2:
         log.info(''.join(str(row)))
     return rows1,rows2
 
