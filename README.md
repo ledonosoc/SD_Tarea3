@@ -7,10 +7,6 @@ En el directorio principal ejecutar el comando
 docker-compose up
 ```
 
-Para crear el entorno de trabajo se debe acceder a la dirección principal de la api, la cual se encarga de crear los keyspace con su respectivo factor de replicación con las tablas "paciente" y "recetas" en su interior.
-```
-'http://localhost:3000/'
-```
 Para realizar el registro de una receta ejecutar este comando en powershell 
 ```powershell
 $headers = @{}
@@ -101,9 +97,11 @@ url: http://localhost:3000/delete
 
 ## 1. Explique la arquitectura que Cassandra maneja.
 * **Cuando se crea el clúster ¿Cómo los nodos se conectan?** 
-Cuando más de un nodo es agregado a un cluster, los nodos se conectan entre ellos, dado a que Cassandra utiliza un arquitectura peer-to-peer (P2P), por lo que cada nodo realiza operaciones de base de datos y puede recibir y completar consultas de clientes sin necesidad de un nodo maestro.
+Cuando más de un nodo es agregado a un cluster, los nodos se conectan entre ellos, dado a que Cassandra utiliza un arquitectura peer-to-peer (P2P), por lo que cada nodo realiza operaciones de base de datos y puede recibir y completar consultas de clientes sin necesidad de un nodo maestro. 
 * **¿Qué ocurre cuando un cliente realiza una petición a uno de los nodos?**
+El nodo que recibe la petición se considera como el nodo coordinador, este nodo procede a enviar la petición a los nodos replica determinado por el nivel de consistencia especificada por el cliente. El coodinador envia una petición que permite saber si los nodos réplica que los nodos esten actualizados, finalmente la información con la marca de tiempo más actualizada es envíada al cliente.
 * **¿Qué ocurre cuando uno de los nodos se desconecta?**
+Cassandra utiliza un método de detección de fallas, determinado localmente por el *gossip state* e historial, si un nodo se ha desconectado o se ha vuelto a conectar. Esta información es utilizada para evitar que una petición de cliente tenga un ruteo que los dirija a nodos que no están disponibles. Este detector de fallas determina cuando ocurre la desconección y marca el nodo como desconectado. Cassandra asume que el nodo volverá a conectarse eventualmente y que los cambios permanentes dentro del cluster son ejecutados exclusivamente usando **nodetool**.
 * **¿La red generada entre los nodos siempre es eficiente?**
 * **¿Existe balanceo de carga?**
 
