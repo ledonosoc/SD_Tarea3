@@ -67,7 +67,7 @@ services:
       - cassandra
     restart: always 
     ports:
-      - 5000:5000 
+      - 3000:3000 
 volumes:
   cassandra_data:
     driver: local
