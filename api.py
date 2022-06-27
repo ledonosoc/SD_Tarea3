@@ -158,7 +158,6 @@ def Select(session):
         log.info(''.join(str(row)))
     return rows1,rows2
 
-
 def Delete(session,data):
     KEYSPACE = "recetas"
     log.info("setting keyspace...")
