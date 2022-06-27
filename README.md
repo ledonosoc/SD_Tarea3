@@ -7,6 +7,10 @@ En el directorio principal ejecutar el comando
 docker-compose up
 ```
 
+Para crear el entorno de trabajo se debe acceder a la dirección principal de la api, la cual se encarga de crear los keyspace con su respectivo factor de replicación con las tablas "paciente" y "recetas" en su interior.
+```
+'http://localhost:3000/'
+```
 Para realizar el registro de una receta ejecutar este comando en powershell 
 ```powershell
 $headers = @{}
