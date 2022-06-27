@@ -103,7 +103,7 @@ def InsertReceta(session, data):
             VALUES (?, ?, ?, ?, ?, ?)
             """)
 
-        session.execute(prepared, (recetas_counter, '%s' %paciente_id, '%s','%s'%data['comentario'],'%s' %data['farmaco'],'%s' %data['doctor']))
+        session.execute(prepared, (recetas_counter, paciente_id, '%s','%s'%data['comentario'],'%s' %data['farmaco'],'%s' %data['doctor']))
         recetas_counter = recetas_counter + 1
 
 def SelectPaciente(session, rut):
@@ -181,9 +181,8 @@ def InsertTest(session):
     KEYSPACE = "recetas"
     log.info("setting keyspace...")
     session.set_keyspace(KEYSPACE)
-    prepared = session.prepare("""INSERT INTO recetas ("id", "id_paciente", "comentario", "farmaco", "doctor") VALUES (?, ?, ?, ?, ?, ?)""")
+    prepared = session.prepare("""INSERT INTO recetas ("id", "id_paciente", "comentario", "farmaco", "doctor") VALUES (?, ?, ?, ?, ?)""")
     for i in range(10):
-
         session.execute(prepared, (i,i,'blabla','remedio','doc'))
 
 def main():
@@ -232,4 +231,4 @@ def test():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True, threaded=True)
+    app.run(host='0.0.0.0', port=3000, debug=True, threaded=True)
