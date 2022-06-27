@@ -25,7 +25,7 @@ $body = '{
 "email": "Xmelon_muskX@fruitter.com",
 "fecha_nacimiento": "28/06/1971",
 "comentario": "Amigdalitis",
-"farmacos": "Paracetamol",
+"farmaco": "Paracetamol",
 "doctor": "El Waton de la Fruta"
 }'
 
@@ -44,7 +44,7 @@ url: http://localhost:3000/create
     "email": "Xmelon_muskX@fruitter.com",
     "fecha_nacimiento": "28/06/1971",
     "comentario": "Amigdalitis",
-    "farmacos": "Paracetamol",
+    "farmaco": "Paracetamol",
     "doctor": "El Waton de la Fruta"
 }
 ```
@@ -72,7 +72,7 @@ url: http://localhost:3000/edit
 {
     "id": 1,
     "comentario": "Amigdalitis aguda",
-    "farmacos": "Paracetamol con aguita",
+    "farmaco": "Paracetamol con aguita",
     "doctor": "El Waton de la Fruta"
 }
 ```
