@@ -124,6 +124,41 @@ def SelectPaciente(session, rut):
     #   log.info(''.join(str(row)))
     return rows
 
+def Select(session):
+    KEYSPACE = "pacientes"
+    log.info("setting keyspace...")
+    session.set_keyspace(KEYSPACE)
+    future = session.execute_async("SELECT * FROM paciente")
+    log.info("id\tnombre\tapellido\trut\temail\tfecha_nacimiento")
+    log.info("---\t----\t----\t----\t----\t----")
+
+    try:
+        rows1 = future.result()
+    except Exception:
+        log.exception("Error reading rows:")
+        return
+    
+    for row in rows:
+        log.info(''.join(str(row)))    
+
+    KEYSPACE = "recetas"
+    log.info("setting keyspace...")
+    session.set_keyspace(KEYSPACE)
+    future = session.execute_async("SELECT * FROM recetas")
+    log.info("id\tid_paciente\tcomentario\tfarmaco\tdoctor")
+    log.info("---\t----\t----\t----\t----")
+
+    try:
+        rows2 = future.result()
+    except Exception:
+        log.exception("Error reading rows:")
+        return
+    
+    for row in rows:
+        log.info(''.join(str(row)))
+    return rows1,rows2
+
+
 def Delete(session,data):
     KEYSPACE = "recetas"
     log.info("setting keyspace...")
@@ -142,6 +177,15 @@ def UpdateReceta(session,data):
     WHERE id="%s";
     """ %data['comentario'] %data['farmaco'] %data['doctor'] %data['id'])
 
+def InsertTest(session):
+    KEYSPACE = "recetas"
+    log.info("setting keyspace...")
+    session.set_keyspace(KEYSPACE)
+    prepared = session.prepare("""INSERT INTO recetas ("id", "id_paciente", "comentario", "farmaco", "doctor") VALUES (?, ?, ?, ?, ?, ?)""")
+    for i in range(10):
+
+        session.execute(prepared, (i,i,'blabla','remedio','doc'))
+
 def main():
     session, cluster = cassandra_conn()
     CreateTables(session)
@@ -154,6 +198,8 @@ def hello_world():
 
 @app.route('/create', methods=['POST'])
 def get_body():
+    pacientes_counter = 0
+    recetas_counter = 0
     session, cluster = cassandra_conn()
     data = request.get_json()
     log.info(data)
@@ -174,26 +220,16 @@ def get_body():
     return (new)
 
 @app.route('/get', methods=['GET'])
-def get_body():
+def getAll():
     session, cluster = cassandra_conn()
-    session.row_factory = dict_factory
-    pacientes = session.execute("SELECT * FROM paciente")
-    
-    pacientes_response = []
-    for pac in list(pacientes):
-        aux = dict(pac)
-        aux["id"] = str(pac["id"])
-        pacientes_response.append(aux)
-    
-    recetas = session.execute("SELECT * FROM recetas")
+    Select(session)
 
-    recetas_response = []
-    for rec in list(recetas):
-        aux = dict(rec)
-        aux["id"] = str(rec["id"])
-        recetas_response.append(aux)
+@app.route('/test', methods=['GET'])
+def test():
+    session, cluster = cassandra_conn()
+    InsertTest(session)
+    return 'INSERT TEST'
 
-    return jsonify({"Pacientes: ": pacientes_response, "Recetas": recetas_response})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True, threaded=True)

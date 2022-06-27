@@ -137,7 +137,7 @@ def SelectPaciente(session, rut):
     #   log.info(''.join(str(row)))
     return rows
 
-def Select(session, rut):
+def Select(session,rut):
     KEYSPACE = "pacientes"
     log.info("setting keyspace...")
     session.set_keyspace(KEYSPACE)
