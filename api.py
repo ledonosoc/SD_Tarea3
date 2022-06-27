@@ -178,12 +178,21 @@ def UpdateReceta(session,data):
     """ %data['comentario'] %data['farmaco'] %data['doctor'] %data['id'])
 
 def InsertTest(session):
+    KEYSPACE = "pacientes"
+    log.info("setting keyspace...")
+    session.set_keyspace(KEYSPACE)
+    prepared = session.prepare("""INSERT INTO paciente ("id", "nombre", "apellido", "rut", "email", "fecha_nacimiento")
+        VALUES (?, ?, ?, ?, ?, ?)
+        """)
+    for i in range(5):
+        session.execute(prepared, (i,'name','lastname','123','bla@bla','1/1/1'))
     KEYSPACE = "recetas"
     log.info("setting keyspace...")
     session.set_keyspace(KEYSPACE)
     prepared = session.prepare("""INSERT INTO recetas ("id", "id_paciente", "comentario", "farmaco", "doctor") VALUES (?, ?, ?, ?, ?)""")
-    for i in range(10):
+    for i in range(5):
         session.execute(prepared, (i,i,'blabla','remedio','doc'))
+    
 
 @app.route('/')
 def hello_world():
