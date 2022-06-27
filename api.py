@@ -95,16 +95,17 @@ def InsertReceta(session, data):
     log.info("setting keyspace...")
     session.set_keyspace(KEYSPACE)
     paciente_id = SelectPaciente(session,data['rut'])
-    if paciente_id == None:
-        InsertPaciente(session,data)
-        paciente_id= pacientes_counter-1
-    else:
-        prepared = session.prepare("""
+    prepared = session.prepare("""
             INSERT INTO recetas ("id", "id_paciente", "comentario", "farmaco", "doctor")
             VALUES (?, ?, ?, ?, ?)
             """)
-
-        session.execute(prepared, (recetas_counter, paciente_id, '%s','%s'%data['comentario'],'%s' %data['farmaco'],'%s' %data['doctor']))
+    if paciente_id == None:
+        InsertPaciente(session,data)
+        paciente_id= pacientes_counter-1
+        session.execute(prepared, (recetas_counter, paciente_id,'%s'%data['comentario'],'%s' %data['farmaco'],'%s' %data['doctor']))
+        recetas_counter = recetas_counter + 1
+    else:
+        session.execute(prepared, (recetas_counter, paciente_id,'%s'%data['comentario'],'%s' %data['farmaco'],'%s' %data['doctor']))
         recetas_counter = recetas_counter + 1
 
 def SelectPaciente(session, rut):
