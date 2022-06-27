@@ -77,7 +77,7 @@ def CreateTables(session):
         """)
 
 def InsertPaciente(session, data):
-    pacientes_counter = 0
+    global pacientes_counter
     KEYSPACE = "pacientes"
     log.info("setting keyspace...")
     session.set_keyspace(KEYSPACE)
@@ -90,7 +90,7 @@ def InsertPaciente(session, data):
     pacientes_counter = pacientes_counter + 1
 
 def InsertReceta(session, data):
-    recetas_counter = 0
+    global recetas_counter
     KEYSPACE = "recetas"
     log.info("setting keyspace...")
     session.set_keyspace(KEYSPACE)
@@ -207,9 +207,7 @@ def get_body():
     session, cluster = cassandra_conn()
     data = request.get_json()
     log.info(data)
-    new = { "id": f"{data['id']}",
-            "id_paciente": f"{data['id_paciente']}",
-            "nombre": f"{data['nombre']}",
+    new = { "nombre": f"{data['nombre']}",
             "apellido": f"{data['apellido']}",
             "rut": f"{data['rut']}",
             "email": f"{data['email']}",
