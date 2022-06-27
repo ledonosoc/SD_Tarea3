@@ -77,6 +77,7 @@ def CreateTables(session):
         """)
 
 def InsertPaciente(session, data):
+    pacientes_counter = 0
     KEYSPACE = "pacientes"
     log.info("setting keyspace...")
     session.set_keyspace(KEYSPACE)
@@ -89,6 +90,7 @@ def InsertPaciente(session, data):
     pacientes_counter = pacientes_counter + 1
 
 def InsertReceta(session, data):
+    recetas_counter = 0
     KEYSPACE = "recetas"
     log.info("setting keyspace...")
     session.set_keyspace(KEYSPACE)
@@ -217,7 +219,7 @@ def get_body():
             "doctor": f"{data['doctor']}"
            }
     
-    InsertReceta(session,new)
+    InsertReceta(session,new)   
 
     return (new)
 
