@@ -5,8 +5,7 @@ from flask import Flask, jsonify, request
 from flask_json_schema import JsonSchema, JsonValidationError
 import json
 
-
-sleep (90)
+#sleep (90)
 log = logging.getLogger()
 log.setLevel('DEBUG')
 handler = logging.StreamHandler()
@@ -100,7 +99,7 @@ def InsertReceta(session, data):
     else:
         prepared = session.prepare("""
             INSERT INTO recetas ("id", "id_paciente", "comentario", "farmaco", "doctor")
-            VALUES (?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?)
             """)
 
         session.execute(prepared, (recetas_counter, paciente_id, '%s','%s'%data['comentario'],'%s' %data['farmaco'],'%s' %data['doctor']))
@@ -122,7 +121,7 @@ def SelectPaciente(session, rut):
     
     #for row in rows:
     #   log.info(''.join(str(row)))
-    return rows
+    return str(rows)
 
 def Select(session):
     KEYSPACE = "pacientes"
@@ -137,10 +136,10 @@ def Select(session):
     except Exception:
         log.exception("Error reading rows:")
         return
-    
+    html=''
     for row in rows1:
         log.info(''.join(str(row)))    
-
+        html += '<h4>' + ''.join(str(row))
     KEYSPACE = "recetas"
     log.info("setting keyspace...")
     session.set_keyspace(KEYSPACE)
@@ -156,7 +155,9 @@ def Select(session):
     
     for row in rows2:
         log.info(''.join(str(row)))
-    return rows1,rows2
+        html += '<h4>' + ''.join(str(row))
+
+    return html
 
 def Delete(session,data):
     KEYSPACE = "recetas"
@@ -184,20 +185,14 @@ def InsertTest(session):
     for i in range(10):
         session.execute(prepared, (i,i,'blabla','remedio','doc'))
 
-def main():
-    session, cluster = cassandra_conn()
-    CreateTables(session)
-
 @app.route('/')
 def hello_world():
     session, cluster = cassandra_conn()
     CreateTables(session)
-    return 'Hello, World!'
+    return 'Tablas creadas correctamente! Bienvenido'
 
 @app.route('/create', methods=['POST'])
 def get_body():
-    pacientes_counter = 0
-    recetas_counter = 0
     session, cluster = cassandra_conn()
     data = request.get_json()
     log.info(data)
@@ -220,13 +215,14 @@ def get_body():
 @app.route('/get', methods=['GET'])
 def getAll():
     session, cluster = cassandra_conn()
-    Select(session)
+    resultado = Select(session)
+    return resultado
 
 @app.route('/test', methods=['GET'])
 def test():
     session, cluster = cassandra_conn()
     InsertTest(session)
-    return 'INSERT TEST'
+    return 'Insertado de prueba correcto'
 
 
 if __name__ == '__main__':
