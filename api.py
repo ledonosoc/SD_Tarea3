@@ -166,7 +166,7 @@ def Delete(session,data):
     log.info("setting keyspace...")
     session.set_keyspace(KEYSPACE)
     
-    session.execute("DELETE FROM recetas WHERE id='%s';"%data['id'])
+    session.execute("DELETE FROM recetas WHERE id=%s;"%data['id'])
 
 def UpdateReceta(session,data):
     KEYSPACE = "recetas"
@@ -176,7 +176,7 @@ def UpdateReceta(session,data):
     SET comentario="%s",
     farmaco="%s",
     doctor="%s"
-    WHERE id="%s";
+    WHERE id=%s;
     """ %data['comentario'] %data['farmaco'] %data['doctor'] %data['id'])
 
 def InsertTest(session):
@@ -226,6 +226,33 @@ def getAll():
     session, cluster = cassandra_conn()
     resultado = Select(session)
     return resultado
+
+@app.route('/delete', methods=['POST'])
+def delete():
+    session, cluster = cassandra_conn()
+    data = request.get_json()
+    log.info(data)
+    new = { "id": f"{data['id']}"
+           }
+    
+    Delete(session,new)   
+
+    return (new)
+
+@app.route('/edit', methods=['POST'])
+def edit():
+    session, cluster = cassandra_conn()
+    data = request.get_json()
+    log.info(data)
+    new = { "id": f"{data['id']}",
+            "comentario": f"{data['comentario']}",
+            "farmaco": f"{data['farmaco']}",
+            "doctor": f"{data['doctor']}"
+           }
+    
+    UpdateReceta(session,new)   
+
+    return (new)
 
 @app.route('/test', methods=['GET'])
 def test():
