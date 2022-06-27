@@ -7,6 +7,11 @@ En el directorio principal ejecutar el comando
 docker-compose up
 ```
 
+Para crear el entorno de trabajo se debe acceder a la dirección principal de la api, la cual se encarga de crear los keyspace con su respectivo factor de replicación con las tablas "paciente" y "recetas" en su interior.
+```
+'http://localhost:3000/'
+```
+
 Para realizar el registro de una receta ejecutar este comando en powershell 
 ```powershell
 $headers = @{}
@@ -103,8 +108,9 @@ El nodo que recibe la petición se considera como el nodo coordinador, este nodo
 * **¿Qué ocurre cuando uno de los nodos se desconecta?**
 Cassandra utiliza un método de detección de fallas, determinado localmente por el *gossip state* e historial, si un nodo se ha desconectado o se ha vuelto a conectar. Esta información es utilizada para evitar que una petición de cliente tenga un ruteo que los dirija a nodos que no están disponibles. Este detector de fallas determina cuando ocurre la desconección y marca el nodo como desconectado. Cassandra asume que el nodo volverá a conectarse eventualmente y que los cambios permanentes dentro del cluster son ejecutados exclusivamente usando **nodetool**.
 * **¿La red generada entre los nodos siempre es eficiente?**
+Como todos los nodos se conectan entre sí cuando se establece conexión y se realiza constante intercambio de mensajes para verificar la presencia de los nodos, a medida que aumenta la cantidad de nodos esto puede generar un consumo excesivo del ancho de banda disponible ya que todos los nodos deben reportarse de manera constante.
 * **¿Existe balanceo de carga?**
-
+Existen distintas politicas de balanceo de carga que pueden ser definidas mediante la importación de la librería cassandra.policies entre las cuales se pueden mencionar: RoundRobinPolicy que es la seleccionada por defecto y distribuye las querys entre todos los nodos del clúster indenpendiente del datacenter al cual este pertenezca, además de DCAwareRoundRobinPolicy, TokenAwarePolicy, WhiteListRoundRobinPolicy, HostFilterPolicy las cuales definen un distinto comportamiento según la seleción.
 ## 2. Cassandra posee principalmente dos estrategias para mantener redundancia en la replicación de datos. ¿Cuáles son estos? ¿Cuál es la ventaja de uno sobre otro? ¿Cuál utilizaría usted para en el caso actual y por qué? Justifique apropiadamente su respuesta.
 Las dos estrategias para mantener la redundancia en la replicación de datos corresponden a "SimpleStrategy" y "NetworkTopologyStrategy". La ventaja de usar "SimpleStrategy" es que tiene mayor facilidad de implementación ya que requiere unicamente definir la cantidad de replicas de la información. Por otro lado la ventaja de utilizar "NetworkTopologyStrategy" es que se tiene una mayor organización de los datos, ya que estos son guardados especificamente en los datacenters que se asignes, permitiendo una mejor distribución de los recursos. Como en este caso se trata de una base de datos pequeña y que posee una cantidad reducida de nodos, es suficiente con aplicar "SimpleStrategy" para que funcione de manera correcta.
 ## 3. Teniendo en cuenta el contexto del problema ¿Usted cree que la solución propuesta es la correcta? ¿Qué ocurre cuando se quiere escalar en la solución? ¿Qué mejoras implementaría? Oriente su respuesta hacia el Sharding (la replicación/distribución de los datos) y comente una estrategia que podría seguir para ordenar los datos.
